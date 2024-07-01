@@ -21,11 +21,11 @@ package me.ryanhamshire.PopulationDensity;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.entity.AbstractHorse;
-import org.bukkit.entity.AnimalTamer;
 import org.bukkit.entity.Animals;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Parrot;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Tameable;
 import org.bukkit.entity.Wolf;
@@ -62,39 +62,17 @@ class TeleportPlayerTask extends BukkitRunnable
     @Override
     public void run()
     {
-        ArrayList<Entity> entitiesToTeleport = new ArrayList<Entity>();
+        ArrayList<Entity> entitiesToTeleport = new ArrayList<>();
 
         List<Entity> nearbyEntities = player.getNearbyEntities(5, this.player.getWorld().getMaxHeight(), 5);
+
         for (Entity entity : nearbyEntities)
         {
             if (entity instanceof Tameable && !(entity instanceof AbstractHorse))
             {
-                Tameable tameable = (Tameable)entity;
-                if (tameable.isTamed())
+                if (isTamerOfEntity(entity, player) && !isSitting(entity))
                 {
-                    AnimalTamer tamer = tameable.getOwner();
-                    if (tamer != null && player.getUniqueId().equals(tamer.getUniqueId()))
-                    {
-                        EntityType type = entity.getType();
-                        if (type == EntityType.WOLF)
-                        {
-                            Wolf dog = (Wolf)entity;
-                            if (dog.isSitting())
-                            {
-                                continue;
-                            }
-                        }
-                        else if (type == EntityType.CAT)
-                        {
-                            Cat cat = (Cat)entity;
-                            if (cat.isSitting())
-                            {
-                                continue;
-                            }
-                        }
-
-                        entitiesToTeleport.add(entity);
-                    }
+                    entitiesToTeleport.add(entity);
                 }
             } else if (entity instanceof Animals && !(entity instanceof AbstractHorse))
             {
@@ -103,8 +81,17 @@ class TeleportPlayerTask extends BukkitRunnable
 
             if (entity instanceof LivingEntity)
             {
-                LivingEntity creature = (LivingEntity)entity;
-                if ((creature.isLeashed() && player.equals(creature.getLeashHolder())) || player.equals(creature.getPassenger()))
+                LivingEntity creature = (LivingEntity) entity;
+                boolean isPlayerRiding = false;
+                for (Entity passenger : creature.getPassengers())
+                {
+                    if (passenger instanceof Player && player.equals(passenger))
+                    {
+                        isPlayerRiding = true;
+                    }
+                }
+                boolean isLeashedByPlayer = creature.isLeashed() && player.equals(creature.getLeashHolder());
+                if (isLeashedByPlayer || isPlayerRiding)
                 {
                     entitiesToTeleport.add(creature);
                 }
@@ -130,6 +117,31 @@ class TeleportPlayerTask extends BukkitRunnable
                     dropShipTeleporter.makeEntityFallDamageImmune(livingEntity);
                 entity.teleport(destination, TeleportCause.PLUGIN);
             }
+        }
+    }
+
+    // Check if the player is the owner of the tameable entity
+    private boolean isTamerOfEntity(Entity entity, Player player)
+    {
+        Tameable tameable = (Tameable) entity;
+        return tameable.isTamed() && tameable.getOwner() != null &&
+            player.getUniqueId().equals(tameable.getOwner().getUniqueId());
+    }
+
+    // Check if the entity is sitting
+    private boolean isSitting(Entity entity)
+    {
+        EntityType type = entity.getType();
+        switch (type)
+        {
+            case WOLF:
+                return ((Wolf) entity).isSitting();
+            case CAT:
+                return ((Cat) entity).isSitting();
+            case PARROT:
+                return ((Parrot) entity).isSitting();
+            default:
+                return false;
         }
     }
 }

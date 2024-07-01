@@ -45,7 +45,7 @@ public class PlayerEventHandler implements Listener
     PopulationDensity instance;
 
     // queue of players waiting to join the server
-    public ArrayList<LoginQueueEntry> loginQueue = new ArrayList<LoginQueueEntry>();
+    public ArrayList<LoginQueueEntry> loginQueue = new ArrayList<>();
 
     // typical constructor, yawn
     public PlayerEventHandler(DataStore dataStore, PopulationDensity plugin)
@@ -157,7 +157,7 @@ public class PlayerEventHandler implements Listener
         if (queuePosition == -1)
         {
             // PopulationDensity.AddLogEntry("\tnot in the queue ");
-            if (this.loginQueue.size() == 0)
+            if (this.loginQueue.isEmpty())
             {
                 // PopulationDensity.AddLogEntry("\tqueue empty, will insert in position 0");
                 queuePosition = 0;
@@ -274,9 +274,9 @@ public class PlayerEventHandler implements Listener
             //otherwise if he's played before, guess his home region as best we can
             else
             {
-                if (joiningPlayer.getBedSpawnLocation() != null)
+                if (joiningPlayer.getRespawnLocation() != null)
                 {
-                    playerData.homeRegion = RegionCoordinates.fromLocation(joiningPlayer.getBedSpawnLocation());
+                    playerData.homeRegion = RegionCoordinates.fromLocation(joiningPlayer.getRespawnLocation());
                 } else
                 {
                     playerData.homeRegion = RegionCoordinates.fromLocation(joiningPlayer.getLocation());

@@ -2,7 +2,7 @@ name: PopulationDensity
 main: me.ryanhamshire.PopulationDensity.PopulationDensity
 softdepend: [Multiverse-Core, My Worlds, Transporter, MystCraft]
 version: '${project.version}-${git.commit.id.abbrev}'
-api-version: '1.16'
+api-version: '1.20.6'
 commands:
    visit:
       description: Teleports the player to a specified region.
@@ -25,7 +25,7 @@ commands:
       usage: /renameregion <name>
       permission: populationdensity.renameregion
    whichregion:
-      description: Tells the player which region he's in.
+      description: Tells the player which region he's in, and the coordinates of the region post.
       usage: /WhichRegion
    newestregion:
       description: Teleports the player to the newest region.

@@ -20,7 +20,7 @@ package me.ryanhamshire.PopulationDensity;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
-import org.apache.commons.lang.Validate;
+import org.apache.commons.lang3.Validate;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -29,6 +29,8 @@ import org.bukkit.Tag;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.Sign;
+import org.bukkit.block.data.type.WallSign;
+import org.bukkit.block.sign.Side;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
@@ -47,6 +49,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.text.DateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
@@ -78,8 +81,8 @@ public class DataStore implements TabCompleter
     private RegionCoordinates nextRegionCoordinates;
 
     //region data cache
-    private ConcurrentHashMap<String, RegionCoordinates> nameToCoordsMap = new ConcurrentHashMap<String, RegionCoordinates>();
-    private ConcurrentHashMap<RegionCoordinates, String> coordsToNameMap = new ConcurrentHashMap<RegionCoordinates, String>();
+    private ConcurrentHashMap<String, RegionCoordinates> nameToCoordsMap = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<RegionCoordinates, String> coordsToNameMap = new ConcurrentHashMap<>();
 
     //initialization!
     public DataStore(List<String> regionNames)
@@ -199,7 +202,7 @@ public class DataStore implements TabCompleter
         //initialize random number generator with a seed based the current time
         Random randomGenerator = new Random();
 
-        ArrayList<RegionCoordinates> possibleDestinations = new ArrayList<RegionCoordinates>();
+        ArrayList<RegionCoordinates> possibleDestinations = new ArrayList<>();
         for (RegionCoordinates coords : this.coordsToNameMap.keySet())
         {
             if (!coords.equals(regionToAvoid))
@@ -514,7 +517,9 @@ public class DataStore implements TabCompleter
                 blockType == Material.JUNGLE_LEAVES ||
                 blockType == Material.ACACIA_LEAVES ||
                 blockType == Material.DARK_OAK_LEAVES ||
-                blockType == Material.GRASS ||
+                blockType == Material.CHERRY_LEAVES ||
+                blockType == Material.MANGROVE_LEAVES ||
+                blockType == Material.SHORT_GRASS ||
                 blockType == Material.TALL_GRASS ||
                 blockType == Material.OAK_LOG ||
                 blockType == Material.SPRUCE_LOG ||
@@ -522,6 +527,8 @@ public class DataStore implements TabCompleter
                 blockType == Material.JUNGLE_LOG ||
                 blockType == Material.ACACIA_LOG ||
                 blockType == Material.DARK_OAK_LOG ||
+                blockType == Material.CHERRY_LOG ||
+                blockType == Material.MANGROVE_LOG ||
                 blockType == Material.SNOW ||
                 blockType == Material.VINE
         ));
@@ -687,40 +694,41 @@ public class DataStore implements TabCompleter
 
     private boolean isEmptyArray(String[] lines)
     {
-        for (String line : lines)
-        {
-            if (!line.isEmpty())
-                return false;
-        }
-
-        return true;
+        return Arrays.stream(lines).allMatch(String::isEmpty);
     }
 
     private void setSign(int x, int y, int z, BlockFace blockFace, String[] lines, String... replacements)
     {
         if (isEmptyArray(lines))
             return;
+
         Block block = PopulationDensity.ManagedWorld.getBlockAt(x, y, z);
         block.setType(Material.OAK_SIGN);
 
-        org.bukkit.block.data.type.Sign wall = (org.bukkit.block.data.type.Sign)block.getBlockData();
-        wall.setRotation(blockFace);
-        block.setBlockData(wall);
-
-        Sign s = (Sign)block.getState();
-        for (int i = 0; i < 4; i++)
+        if (block.getState() instanceof Sign)
         {
-            String line = lines[i];
-            for (int r = 0; r < replacements.length; r++, r++)
+            org.bukkit.block.data.type.Sign wall = (org.bukkit.block.data.type.Sign)block.getBlockData();
+            wall.setRotation(blockFace);
+            block.setBlockData(wall);
+
+            Sign s = (Sign)block.getState();
+            for (int i = 0; i < 4; i++)
             {
-                String key = replacements[r];
-                String value = replacements[r + 1];
-                line = line.replace(key, value);
+                String line = lines[i];
+                for (int r = 0; r < replacements.length; r++, r++)
+                {
+                    String key = replacements[r];
+                    String value = replacements[r + 1];
+                    line = line.replace(key, value);
+                }
+                s.getSide(Side.FRONT).setLine(i, color(line));
+                s.setWaxed(true);
             }
-            s.setLine(i, color(line));
-            s.setEditable(false);
+            s.update();
+        } else
+        {
+            PopulationDensity.AddLogEntry("Failed to set sign at " + x + ", " + y + ", " + z + " facing " + blockFace);
         }
-        s.update();
     }
 
     private void setWallSign(int x, int y, int z, BlockFace blockFace, String[] lines, String... replacements)
@@ -730,24 +738,30 @@ public class DataStore implements TabCompleter
         Block block = PopulationDensity.ManagedWorld.getBlockAt(x, y, z);
         block.setType(Material.OAK_WALL_SIGN);
 
-        org.bukkit.block.data.type.WallSign wall = (org.bukkit.block.data.type.WallSign)block.getBlockData();
-        wall.setFacing(blockFace);
-        block.setBlockData(wall);
-
-        Sign s = (Sign)block.getState();
-        for (int i = 0; i < 4; i++)
+        if (block.getState().getBlockData() instanceof WallSign)
         {
-            String line = lines[i];
-            for (int r = 0; r < replacements.length; r++, r++)
+            WallSign wall =  (WallSign) block.getBlockData();
+            wall.setFacing(blockFace);
+            block.setBlockData(wall);
+
+            Sign s = (Sign)block.getState();
+            for (int i = 0; i < 4; i++)
             {
-                String key = replacements[r];
-                String value = replacements[r + 1];
-                line = line.replace(key, value);
+                String line = lines[i];
+                for (int r = 0; r < replacements.length; r++, r++)
+                {
+                    String key = replacements[r];
+                    String value = replacements[r + 1];
+                    line = line.replace(key, value);
+                }
+                s.getSide(Side.FRONT).setLine(i, line);
+                s.setWaxed(true);
             }
-            s.setLine(i, color(line));
-            s.setEditable(false);
+            s.update();
+        } else
+        {
+            PopulationDensity.AddLogEntry("Failed to set wall sign at " + x + ", " + y + ", " + z + " facing " + blockFace);
         }
-        s.update();
     }
 
     private String color(String string)
@@ -765,7 +779,7 @@ public class DataStore implements TabCompleter
         Messages[] messageIDs = Messages.values();
         this.messages = new String[Messages.values().length];
 
-        HashMap<String, CustomizableMessage> defaults = new HashMap<String, CustomizableMessage>();
+        HashMap<String, CustomizableMessage> defaults = new HashMap<>();
 
         //initialize defaults
         this.addDefault(defaults, Messages.NoManagedWorld, "The PopulationDensity plugin has not been properly configured.  Please update your config.yml to specify a world to manage.", null);
@@ -908,7 +922,7 @@ public class DataStore implements TabCompleter
         }
 
         String arg = builder.toString().trim();
-        ArrayList<String> matches = new ArrayList<String>();
+        ArrayList<String> matches = new ArrayList<>();
         for (String name : this.coordsToNameMap.values())
         {
             if (StringUtil.startsWithIgnoreCase(name, arg))

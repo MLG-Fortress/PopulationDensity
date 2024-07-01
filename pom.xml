@@ -6,11 +6,11 @@
 
     <groupId>me.ryanhamshire</groupId>
     <artifactId>PopulationDensity</artifactId>
-    <version>5.13</version>
+    <version>6.0</version>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
     </properties>
     <repositories>
         <repository>
@@ -52,7 +52,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.1.0</version>
+                <version>3.6.0</version>
                 <configuration>
                     <createDependencyReducedPom>false</createDependencyReducedPom>
                     <artifactSet>
@@ -99,11 +99,17 @@
         </plugins>
     </build>
     <dependencies>
+        <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-lang3 -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.14.0</version>
+        </dependency>
         <!--Spigot API-->
         <dependency>
             <groupId>org.spigotmc</groupId>
             <artifactId>spigot-api</artifactId>
-            <version>1.16.1-R0.1-SNAPSHOT</version>
+            <version>1.20.6-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <!--Google stuff-->
@@ -111,12 +117,6 @@
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <version>19.0</version>
-        </dependency>
-        <!--json stuff-->
-        <dependency>
-            <groupId>com.googlecode.json-simple</groupId>
-            <artifactId>json-simple</artifactId>
-            <version>1.1.1</version>
         </dependency>
         <dependency>
             <groupId>org.bstats</groupId>
@@ -127,7 +127,7 @@
         <dependency>
             <groupId>io.papermc</groupId>
             <artifactId>paperlib</artifactId>
-            <version>1.0.3</version>
+            <version>1.0.8</version>
             <scope>compile</scope>
         </dependency>
     </dependencies>

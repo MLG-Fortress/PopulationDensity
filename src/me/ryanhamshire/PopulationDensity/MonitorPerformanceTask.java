@@ -38,6 +38,7 @@ import org.bukkit.material.Colorable;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class MonitorPerformanceTask implements Runnable
@@ -128,7 +129,7 @@ public class MonitorPerformanceTask implements Runnable
     static void thinEntities()
     {
         //thinnable entity types
-        final HashSet<EntityType> thinnableAnimals = new HashSet<EntityType>(Arrays.asList
+        final HashSet<EntityType> thinnableAnimals = new HashSet<>(Arrays.asList
                 (
                         EntityType.COW,
                         EntityType.HORSE,
@@ -138,7 +139,12 @@ public class MonitorPerformanceTask implements Runnable
                         EntityType.WOLF,
                         EntityType.OCELOT,
                         EntityType.RABBIT,
-                        EntityType.MUSHROOM_COW
+                        EntityType.MOOSHROOM,
+                        EntityType.SNIFFER,
+                        EntityType.FOX,
+                        EntityType.GOAT,
+                        EntityType.LLAMA,
+                        EntityType.CAMEL
                 ));
 
         if (PopulationDensity.instance.thinIronGolemsToo)
@@ -148,7 +154,7 @@ public class MonitorPerformanceTask implements Runnable
 
         int totalEntities = 0;
         int totalRemoved = 0;
-        HashMap<String, Integer> totalEntityCounter = new HashMap<String, Integer>();
+        HashMap<String, Integer> totalEntityCounter = new HashMap<>();
         for (World world : PopulationDensity.instance.getServer().getWorlds())
         {
             Environment environment = world.getEnvironment();
@@ -156,7 +162,7 @@ public class MonitorPerformanceTask implements Runnable
 
             for (Chunk chunk : world.getLoadedChunks())
             {
-                HashMap<String, Integer> chunkEntityCounter = new HashMap<String, Integer>();
+                HashMap<String, Integer> chunkEntityCounter = new HashMap<>();
 
                 Entity[] entities = chunk.getEntities();
                 int monsterCount = 0;
@@ -184,7 +190,7 @@ public class MonitorPerformanceTask implements Runnable
                     }
 
                     //skip any entities with nameplates
-                    if (entity.getCustomName() != null && entity.getCustomName() != "") continue;
+                    if (entity.getCustomName() != null && !entity.getCustomName().isBlank()) continue;
 
                     //skip entities in vehicles
                     if (entity.isInsideVehicle()) continue;
@@ -206,7 +212,7 @@ public class MonitorPerformanceTask implements Runnable
                             entity.remove();
                             totalRemoved++;
                         }
-                    } else if (type == EntityType.DROPPED_ITEM)
+                    } else if (type == EntityType.ITEM)
                     {
                         if (count > 25)
                         {
@@ -247,7 +253,7 @@ public class MonitorPerformanceTask implements Runnable
                             {
                                 Block block = entity.getLocation().getBlock();
                                 Material blockType = block.getType();
-                                if (blockType == Material.GRASS || blockType == Material.AIR)
+                                if (blockType == Material.SHORT_GRASS || blockType == Material.AIR)
                                 {
                                     block.setType(Material.DEAD_BUSH);
                                 }
@@ -283,7 +289,7 @@ public class MonitorPerformanceTask implements Runnable
                 {
                     BlockState[] blocks = chunk.getTileEntities();
                     int total = 0;
-                    ConcurrentHashMap<String, Integer> entityCounter = new ConcurrentHashMap<String, Integer>();
+                    ConcurrentHashMap<String, Integer> entityCounter = new ConcurrentHashMap<>();
                     for (BlockState block : blocks)
                     {
                         String typeName = block.getType().name();
@@ -303,9 +309,9 @@ public class MonitorPerformanceTask implements Runnable
                         total++;
                     }
 
-                    for (String typeName : entityCounter.keySet())
+                    for (Map.Entry<String, Integer> entry : entityCounter.entrySet())
                     {
-                        PopulationDensity.AddLogEntry(";" + world.getName() + ";" + chunk.getX() + ";" + chunk.getZ() + ";" + typeName + ";" + entityCounter.get(typeName));
+                        PopulationDensity.AddLogEntry(";" + world.getName() + ";" + chunk.getX() + ";" + chunk.getZ() + ";" + entry.getKey() + ";" + entry.getValue());
                     }
 
                     if (total > 10)

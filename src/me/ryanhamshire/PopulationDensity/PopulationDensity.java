@@ -19,7 +19,7 @@
 package me.ryanhamshire.PopulationDensity;
 
 import io.papermc.lib.PaperLib;
-import org.apache.commons.lang.WordUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.ChatColor;
 import org.bukkit.Chunk;
@@ -51,7 +51,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.Callable;
 import java.util.logging.Logger;
 
 public class PopulationDensity extends JavaPlugin
@@ -178,12 +177,12 @@ public class PopulationDensity extends JavaPlugin
 
         //build a list of normal environment worlds
         List<World> worlds = this.getServer().getWorlds();
-        ArrayList<World> normalWorlds = new ArrayList<World>();
-        for (int i = 0; i < worlds.size(); i++)
+        ArrayList<World> normalWorlds = new ArrayList<>();
+        for (World world: worlds)
         {
-            if (worlds.get(i).getEnvironment() == Environment.NORMAL)
+            if (world.getEnvironment() == Environment.NORMAL)
             {
-                normalWorlds.add(worlds.get(i));
+                normalWorlds.add(world);
             }
         }
 
@@ -364,9 +363,9 @@ public class PopulationDensity extends JavaPlugin
                 "dust"
         );
 
-        this.config_regionNames = new ArrayList<String>();
+        this.config_regionNames = new ArrayList<>();
         List<String> regionNames = config.getStringList("PopulationDensity.Region Name List");
-        if (regionNames == null || regionNames.size() == 0)
+        if (regionNames == null || regionNames.isEmpty())
         {
             regionNames = defaultRegionNames;
         }
@@ -536,16 +535,16 @@ public class PopulationDensity extends JavaPlugin
         try
         {
             Metrics metrics = new Metrics(this, 3343);
-            metrics.addCustomChart(new Metrics.SimplePie("bukkit_impl", new Callable<String>()
-            {
-                @Override
-                public String call() throws Exception
-                {
-                    return getServer().getVersion().split("-")[1];
-                }
-            }));
+            metrics.addCustomChart(new Metrics.SimplePie("bukkit_impl", this::getVersionImplementation));
         }
-        catch (Throwable ignored) {}
+        catch (Exception ignored)
+        {
+            PopulationDensity.AddLogEntry("Failed to submit metrics data.");
+        }
+    }
+
+    private String getVersionImplementation() {
+        return getServer().getVersion().split("-")[1];
     }
 
     String getRegionNameError(String name, boolean console)
@@ -580,7 +579,7 @@ public class PopulationDensity extends JavaPlugin
 
         //if nothing, replace with default
         int i = 0;
-        if (linesFromConfig == null || linesFromConfig.size() == 0)
+        if (linesFromConfig == null || linesFromConfig.isEmpty())
         {
             for (; i < defaultLines.length && i < 4; i++)
             {
@@ -657,10 +656,10 @@ public class PopulationDensity extends JavaPlugin
                 {
                     if (result.nearPost && this.launchPlayer(player))
                     {
-                        this.TeleportPlayer(player, targetPlayerData.homeRegion, 1);
+                        this.teleportPlayer(player, targetPlayerData.homeRegion, 1);
                     } else
                     {
-                        this.TeleportPlayer(player, targetPlayerData.homeRegion, 0);
+                        this.teleportPlayer(player, targetPlayerData.homeRegion, 0);
                     }
 
                 } else if (this.dataStore.getRegionName(targetPlayerData.homeRegion) == null)
@@ -671,10 +670,10 @@ public class PopulationDensity extends JavaPlugin
                 {
                     if (this.launchPlayer(player))
                     {
-                        this.TeleportPlayer(player, targetPlayerData.homeRegion, 1);
+                        this.teleportPlayer(player, targetPlayerData.homeRegion, 1);
                     } else
                     {
-                        this.TeleportPlayer(player, targetPlayerData.homeRegion, 0);
+                        this.teleportPlayer(player, targetPlayerData.homeRegion, 0);
                     }
                 }
 
@@ -682,7 +681,7 @@ public class PopulationDensity extends JavaPlugin
             } else
             {
                 //find the specified region, and send an error message if it's not found
-                String name = PopulationDensity.join(args);
+                String name = String.join(" ", args);
                 RegionCoordinates region = this.dataStore.getRegionCoordinates(name);
                 if (region == null)
                 {
@@ -693,10 +692,10 @@ public class PopulationDensity extends JavaPlugin
                 //otherwise, teleport the user to the specified region
                 if (this.launchPlayer(player))
                 {
-                    this.TeleportPlayer(player, region, 1);
+                    this.teleportPlayer(player, region, 1);
                 } else
                 {
-                    this.TeleportPlayer(player, region, 0);
+                    this.teleportPlayer(player, region, 0);
                 }
             }
 
@@ -717,10 +716,10 @@ public class PopulationDensity extends JavaPlugin
             RegionCoordinates openRegion = this.dataStore.getOpenRegion();
             if (result.nearPost && this.launchPlayer(player))
             {
-                this.TeleportPlayer(player, openRegion, 1);
+                this.teleportPlayer(player, openRegion, 1);
             } else
             {
-                this.TeleportPlayer(player, openRegion, 0);
+                this.teleportPlayer(player, openRegion, 0);
             }
 
             PopulationDensity.sendMessage(player, TextMode.Success, Messages.NewestRegionConfirmation);
@@ -743,6 +742,10 @@ public class PopulationDensity extends JavaPlugin
             {
                 PopulationDensity.sendMessage(player, TextMode.Info, Messages.WhichRegion, capitalize(regionName));
             }
+            Location postLocation = getRegionCenter(currentRegion, true);
+            player.sendMessage(ChatColor.AQUA + "The region post can be found at (X: " 
+                + Math.round(postLocation.getX()) + ", Y: " + Math.round(postLocation.getY())
+                + ", Z: " + Math.round(postLocation.getZ()) + ")" + ".");
 
             return true;
         } else if (cmd.getName().equalsIgnoreCase("listregions"))
@@ -812,16 +815,15 @@ public class PopulationDensity extends JavaPlugin
             if (randomRegion == null)
             {
                 PopulationDensity.sendMessage(player, TextMode.Err, Messages.NoMoreRegions);
+                return true;
+            } 
+            
+            if (result.nearPost && this.launchPlayer(player))
+            {
+                this.teleportPlayer(player, randomRegion, 1);
             } else
             {
-                if (result.nearPost && this.launchPlayer(player))
-                {
-                    this.TeleportPlayer(player, randomRegion, 1);
-                } else
-                {
-                    this.TeleportPlayer(player, randomRegion, 0);
-                }
-
+                this.teleportPlayer(player, randomRegion, 0);
             }
 
             return true;
@@ -830,7 +832,6 @@ public class PopulationDensity extends JavaPlugin
             if (args.length < 1) return false;
 
             //send a notification to the invitee, if he's available
-            @SuppressWarnings("deprecation")
             Player invitee = this.getServer().getPlayer(args[0]);
             if (invitee != null && player.canSee(invitee))
             {
@@ -854,7 +855,6 @@ public class PopulationDensity extends JavaPlugin
         {
             if (args.length < 1) return false;
 
-            @SuppressWarnings("deprecation")
             Player targetPlayer = this.getServer().getPlayerExact(args[0]);
             if (targetPlayer != null)
             {
@@ -872,7 +872,7 @@ public class PopulationDensity extends JavaPlugin
                 }
 
                 //otherwise, teleport the target player to the destination region                  
-                this.TeleportPlayer(targetPlayer, destination, 0);
+                this.teleportPlayer(targetPlayer, destination, 0);
                 PopulationDensity.sendMessage(player, TextMode.Success, Messages.PlayerMoved);
             } else
             {
@@ -1015,19 +1015,15 @@ public class PopulationDensity extends JavaPlugin
             return true;
         }
 
-        if (!allowRename)
+        if (!allowRename && this.dataStore.getRegionName(currentRegion) != null)
         {
-            String name = this.dataStore.getRegionName(currentRegion);
-            if (name != null)
-            {
-                PopulationDensity.sendMessage(player, TextMode.Err, Messages.RegionAlreadyNamed);
-                return true;
-            }
+            PopulationDensity.sendMessage(player, TextMode.Err, Messages.RegionAlreadyNamed);
+            return true;
         }
 
         //validate argument
         if (args.length < 1) return false;
-        String name = PopulationDensity.join(args);
+        String name = String.join(" ", args);
 
         if (this.dataStore.getRegionCoordinates(name) != null)
         {
@@ -1087,11 +1083,6 @@ public class PopulationDensity extends JavaPlugin
         return builder.toString().trim();
     }
 
-    private static String join(String[] args)
-    {
-        return join(args, 0);
-    }
-
     private boolean handleHomeCommand(Player player, PlayerData playerData)
     {
         //consider config, player location, player permissions
@@ -1101,10 +1092,10 @@ public class PopulationDensity extends JavaPlugin
             RegionCoordinates homeRegion = playerData.homeRegion;
             if (result.nearPost && this.launchPlayer(player))
             {
-                this.TeleportPlayer(player, homeRegion, 1);
+                this.teleportPlayer(player, homeRegion, 1);
             } else
             {
-                this.TeleportPlayer(player, homeRegion, 0);
+                this.teleportPlayer(player, homeRegion, 0);
             }
             return true;
         }
@@ -1215,12 +1206,12 @@ public class PopulationDensity extends JavaPlugin
 
     //teleports a player to a specific region of the managed world, notifying players of arrival/departure as necessary
     //players always land at the region's region post, which is placed on the surface at the center of the region
-    public void TeleportPlayer(Player player, RegionCoordinates region, int delaySeconds)
+    public void teleportPlayer(Player player, RegionCoordinates region, int delaySeconds)
     {
-        TeleportPlayerToRegion(player, region, delaySeconds, config_launchAndDropPlayers);
+        teleportPlayerToRegion(player, region, delaySeconds, config_launchAndDropPlayers);
     }
 
-    public void TeleportPlayerToRegion(Player player, RegionCoordinates region, int delaySeconds, Boolean doDrop)
+    public void teleportPlayerToRegion(Player player, RegionCoordinates region, int delaySeconds, Boolean doDrop)
     {
         //where specifically to send the player?
         Location teleportDestination = getRegionCenter(region, true);
@@ -1343,8 +1334,7 @@ public class PopulationDensity extends JavaPlugin
 
             return string.toUpperCase();
 
-        //return string.substring(0, 1).toUpperCase() + string.substring(1);
-        return WordUtils.capitalize(string);
+        return StringUtils.capitalize(string);
     }
 
     public void resetIdleTimer(Player player)

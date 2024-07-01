@@ -28,7 +28,6 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityToggleGlideEvent;
-import org.bukkit.event.player.PlayerToggleFlightEvent;
 
 import java.util.HashSet;
 import java.util.UUID;
@@ -81,7 +80,7 @@ public class DropShipTeleporter implements Listener
         }
     }
 
-    HashSet<UUID> fallImmunityList = new HashSet<UUID>();
+    HashSet<UUID> fallImmunityList = new HashSet<>();
 
     void makeEntityFallDamageImmune(LivingEntity entity)
     {

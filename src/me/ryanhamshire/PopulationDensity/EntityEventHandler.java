@@ -41,16 +41,19 @@ import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.ItemDespawnEvent;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 
 public class EntityEventHandler implements Listener
 {
     PopulationDensity instance;
+
+    private Random random = new Random();
+
     //block types monsters may spawn on when grinders are disabled
     static HashMap<Environment, HashSet<Material>> allowedSpawnBlocks;
 
@@ -60,19 +63,21 @@ public class EntityEventHandler implements Listener
         {
             allowedSpawnBlocks = new HashMap<Environment, HashSet<Material>>();
 
-            allowedSpawnBlocks.put(Environment.NORMAL, new HashSet<Material>(Arrays.asList(
+            allowedSpawnBlocks.put(Environment.NORMAL, new HashSet<>(Arrays.asList(
                     Material.GRASS_BLOCK,
                     Material.SAND,
+                    Material.SUSPICIOUS_SAND,
                     Material.GRAVEL,
+                    Material.SUSPICIOUS_GRAVEL,
                     Material.STONE,
                     Material.MOSSY_COBBLESTONE,
                     Material.OBSIDIAN)));
 
-            allowedSpawnBlocks.put(Environment.NETHER, new HashSet<Material>(Arrays.asList(
+            allowedSpawnBlocks.put(Environment.NETHER, new HashSet<>(Arrays.asList(
                     Material.NETHERRACK,
                     Material.NETHER_BRICK)));
 
-            allowedSpawnBlocks.put(Environment.THE_END, new HashSet<Material>(Arrays.asList(
+            allowedSpawnBlocks.put(Environment.THE_END, new HashSet<>(Arrays.asList(
                     Material.END_STONE,
                     Material.OBSIDIAN)));
         }
@@ -100,22 +105,26 @@ public class EntityEventHandler implements Listener
         //NOTE!  Why not distance?  Because distance squared is cheaper and will be good enough for this.
     }
 
-    private ArrayList<Material> saplings = new ArrayList<Material>(Arrays.asList(
+    private Set<Material> saplings = new HashSet<>(Arrays.asList(
             Material.OAK_SAPLING,
             Material.SPRUCE_SAPLING,
             Material.BIRCH_SAPLING,
             Material.JUNGLE_SAPLING,
             Material.ACACIA_SAPLING,
-            Material.DARK_OAK_SAPLING
+            Material.DARK_OAK_SAPLING,
+            Material.CHERRY_SAPLING,
+            Material.MANGROVE_PROPAGULE
     ));
 
-    private ArrayList<Material> logs = new ArrayList<Material>(Arrays.asList(
+    private Set<Material> logs = new HashSet<>(Arrays.asList(
             Material.OAK_LOG,
             Material.SPRUCE_LOG,
             Material.BIRCH_LOG,
             Material.JUNGLE_LOG,
             Material.ACACIA_LOG,
-            Material.DARK_OAK_LOG
+            Material.DARK_OAK_LOG,
+            Material.CHERRY_LOG,
+            Material.MANGROVE_LOG
     ));
 
     //when an item despawns
@@ -140,7 +149,7 @@ public class EntityEventHandler implements Listener
 
         //only replace these blocks with saplings
         Block block = entity.getLocation().getBlock();
-        if (block.getType() != Material.AIR && block.getType() != Material.GRASS && block.getType() != Material.SNOW)
+        if (block.getType() != Material.AIR && block.getType() != Material.SHORT_GRASS && block.getType() != Material.SNOW)
             return;
 
         //don't plant saplings next to other saplings or logs
@@ -154,9 +163,9 @@ public class EntityEventHandler implements Listener
                 block.getRelative(BlockFace.SOUTH_WEST),
                 block.getRelative(BlockFace.NORTH_WEST)};
 
-        for (int i = 0; i < neighbors.length; i++)
+        for (Block neighbor : neighbors)
         {
-            if (saplings.contains(neighbors[i].getType()) || logs.contains(neighbors[i].getType())) return;
+            if (saplings.contains(neighbor.getType()) || logs.contains(neighbor.getType())) return;
         }
 
         //only plant trees in grass or dirt
@@ -288,7 +297,7 @@ public class EntityEventHandler implements Listener
                         animalType = EntityType.PIG;
                     } else if (entity.getType() == EntityType.ENDERMAN)
                     {
-                        if (new Random().nextBoolean())
+                        if (random.nextBoolean())
                             animalType = EntityType.HORSE;
                         else
                             animalType = EntityType.WOLF;
@@ -320,7 +329,7 @@ public class EntityEventHandler implements Listener
                     Block aboveBlock = toHandle.getRelative(BlockFace.UP);
                     if (aboveBlock.getType() == Material.AIR)
                     {
-                        aboveBlock.setType(Material.GRASS);
+                        aboveBlock.setType(Material.SHORT_GRASS);
                     }
                     continue;
                 }

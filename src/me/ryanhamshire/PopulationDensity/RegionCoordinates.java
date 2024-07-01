@@ -59,18 +59,19 @@ public class RegionCoordinates
         String[] elements = string.split(" ");
 
         //expect two elements - X and Z, respectively
-        String xString = elements[0];
-        String zString = elements[1];
-
         //convert those to integer values
-        this.x = Integer.parseInt(xString);
-        this.z = Integer.parseInt(zString);
+        this.x = Integer.parseInt(elements[0]);
+        this.z = Integer.parseInt(elements[1]);
     }
 
     //opposite of above - converts region coordinates to a handy string
     public String toString()
     {
-        return Integer.toString(this.x) + " " + Integer.toString(this.z);
+        return new StringBuilder()
+                .append(this.x)
+                .append(" ")
+                .append(this.z)
+                .toString();
     }
 
     //compares two region coordinates to see if they match
