@@ -21,6 +21,7 @@ package me.ryanhamshire.PopulationDensity;
 import io.papermc.lib.PaperLib;
 import org.apache.commons.lang3.StringUtils;
 import org.bstats.bukkit.Metrics;
+import org.bstats.charts.SimplePie;
 import org.bukkit.ChatColor;
 import org.bukkit.Chunk;
 import org.bukkit.ChunkSnapshot;
@@ -535,7 +536,7 @@ public class PopulationDensity extends JavaPlugin
         try
         {
             Metrics metrics = new Metrics(this, 3343);
-            metrics.addCustomChart(new Metrics.SimplePie("bukkit_impl", this::getVersionImplementation));
+            metrics.addCustomChart(new SimplePie("bukkit_impl", this::getVersionImplementation));
         }
         catch (Exception ignored)
         {

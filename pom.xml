@@ -58,6 +58,7 @@
                     <artifactSet>
                         <includes>
                             <include>org.bstats:bstats-bukkit</include>
+                            <include>org.bstats:bstats-base</include>
                             <include>io.papermc:paperlib</include>
                         </includes>
                     </artifactSet>
@@ -83,9 +84,9 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>pl.project13.maven</groupId>
-                <artifactId>git-commit-id-plugin</artifactId>
-                <version>4.0.0</version>
+                <groupId>io.github.git-commit-id</groupId>
+                <artifactId>git-commit-id-maven-plugin</artifactId>
+                <version>9.0.1</version>
                 <executions>
                     <execution>
                         <id>get-the-git-infos</id>
@@ -103,7 +104,7 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
-            <version>3.14.0</version>
+            <version>3.15.0</version>
         </dependency>
         <!--Spigot API-->
         <dependency>
@@ -121,7 +122,7 @@
         <dependency>
             <groupId>org.bstats</groupId>
             <artifactId>bstats-bukkit</artifactId>
-            <version>1.7</version>
+            <version>3.0.2</version>
             <scope>compile</scope>
         </dependency>
         <dependency>

@@ -114,8 +114,10 @@ public class DataStore implements TabCompleter
                     this.coordsToNameMap.put(regionCoordinates, regionName);
                 }
 
-                //catch for files named after region names
-                catch (Exception e) { }
+                catch (Exception e)
+                {
+                    PopulationDensity.AddLogEntry("Failed to load region data from file " + files[i].getName().toLowerCase() + ": " + e.getMessage());
+                }
             }
         }
 
