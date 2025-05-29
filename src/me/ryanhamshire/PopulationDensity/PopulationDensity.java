@@ -137,7 +137,7 @@ public class PopulationDensity extends JavaPlugin
     boolean config_launchAndDropPlayers;
     boolean config_launchAndDropNewPlayers;
     boolean config_teleportAnimals = true;
-    boolean config_teleportVillagers = false;
+    boolean config_teleportVillagersInBoat = false;
 
     public int minimumRegionPostY;
 
@@ -237,7 +237,7 @@ public class PopulationDensity extends JavaPlugin
         this.config_launchAndDropPlayers = config.getBoolean("PopulationDensity.LaunchAndDropPlayers", true);
         this.config_launchAndDropNewPlayers = config.getBoolean("PopulationDensity.LaunchAndDropNewPlayers", config_launchAndDropPlayers);
         this.config_teleportAnimals = config.getBoolean("PopulationDensity.TeleportAnimals", config_teleportAnimals);
-        this.config_teleportVillagers = config.getBoolean("PopulationDensity.TeleportVillagers", config_teleportVillagers);
+        this.config_teleportVillagersInBoat = config.getBoolean("PopulationDensity.TeleportVillagersInBoat", config_teleportVillagersInBoat);
 
         String top = config.getString("PopulationDensity.PostDesign.TopBlock", "GLOWSTONE");
         String midTop = config.getString("PopulationDensity.PostDesign.MidTopBlock", "GLOWSTONE");
@@ -427,7 +427,7 @@ public class PopulationDensity extends JavaPlugin
         outConfig.set("PopulationDensity.LaunchAndDropPlayers", this.config_launchAndDropPlayers);
         outConfig.set("PopulationDensity.LaunchAndDropNewPlayers", this.config_launchAndDropNewPlayers);
         outConfig.set("PopulationDensity.TeleportAnimals", this.config_teleportAnimals);
-        outConfig.set("PopulationDensity.TeleportVillagers", this.config_teleportVillagers);
+        outConfig.set("PopulationDensity.TeleportVillagersInBoat", this.config_teleportVillagersInBoat);
         outConfig.set("PopulationDensity.MinimumRegionPostY", this.minimumRegionPostY);
         outConfig.set("PopulationDensity.PreciseWorldSpawn", this.preciseWorldSpawn);
         outConfig.set("PopulationDensity.MinimumWoodAvailableToPlaceNewPlayers", this.woodMinimum);
@@ -808,10 +808,11 @@ public class PopulationDensity extends JavaPlugin
                     block = block.getRelative(BlockFace.UP);
                 }
 
+                List<Entity> entitiesToTeleport = TeleportPlayerUtils.detectEntitiesToTeleport(player);
                 if (result.nearPost && this.launchPlayer(player))
-                    new TeleportPlayerTask(player, block.getLocation(), false, instance).runTaskLater(this, 20L);
+                    new TeleportPlayerTask(player, block.getLocation(), false, instance, entitiesToTeleport).runTaskLater(this, 20L);
                 else
-                    new TeleportPlayerTask(player, block.getLocation(), false, instance).runTaskLater(this, 0L);
+                    new TeleportPlayerTask(player, block.getLocation(), false, instance, entitiesToTeleport).runTaskLater(this, 0L);
             }
 
             return true;
@@ -1248,11 +1249,12 @@ public class PopulationDensity extends JavaPlugin
             return;
         }
 
-
         //drop the player from the sky //RoboMWM - only if LaunchAndDropPlayers is enabled
         if (doDrop && !player.getGameMode().equals(GameMode.SPECTATOR))
             teleportDestination = new Location(ManagedWorld, teleportDestination.getX(), ManagedWorld.getMaxHeight() + 10, teleportDestination.getZ(), player.getLocation().getYaw(), 90);
-        new TeleportPlayerTask(player, teleportDestination, doDrop, instance, dropShipTeleporterInstance).runTaskLater(this, delaySeconds * 20L);
+
+        List<Entity> entities = TeleportPlayerUtils.detectEntitiesToTeleport(player);
+        new TeleportPlayerTask(player, teleportDestination, doDrop, instance, dropShipTeleporterInstance, entities).runTaskLater(this, delaySeconds * 20L);
 
         //kill bad guys in the area
         removeMonstersAround(teleportDestination);

@@ -38,6 +38,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.List;
 
 public class PlayerEventHandler implements Listener
 {
@@ -264,7 +265,8 @@ public class PlayerEventHandler implements Listener
                 {
                     // unless pop density is configured to force a precise world spawn point
                     if (instance.preciseWorldSpawn)
-                        new TeleportPlayerTask(joiningPlayer, joiningPlayer.getWorld().getSpawnLocation(), false, instance).runTaskLater(instance, 1L);
+                        new TeleportPlayerTask(joiningPlayer, joiningPlayer.getWorld().getSpawnLocation(), false,
+                                instance, List.of()).runTaskLater(instance, 1L);
 
                     // always remove monsters around the new player's spawn point to prevent ambushes
                     PopulationDensity.removeMonstersAround(joiningPlayer.getWorld().getSpawnLocation());
